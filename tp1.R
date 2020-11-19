@@ -1,24 +1,6 @@
 ## TP 1 INSTRUCTIONS (Version:19/11/20)
 
-# Change your_folder by your project folder
-your_folder <- "D:/projects/datavalue_fstatadd2"
-setwd(your_folder)
-
-install.packages("arules")
-library("arules")
-
-
-## Exercice a
-# Load Groceries (available in R Lib)
-data("Groceries")
-Groceries
-
-rules <- apriori(Groceries, parameter = list(support = .001))
-rules
-
-inspect(head(sort(rules, by = "lift"), 3))
-
-## Exercice b 
+## Exercice a : apriori
 # Follow instructions here : 
 ## https://www.datacamp.com/community/tutorials/market-basket-analysis-r
 
@@ -45,7 +27,9 @@ library(dplyr)
 install.packages()
 
 # change it according to your path
-setwd("D:/projects/datavalue_fstatadd2/tp1_exercice_b_data")
+# Change your_folder by your project folder
+your_folder <- "D:/projects/datavalue_fstatadd2/tp1_exercice_b_data"
+setwd(your_folder)
 
 
 #read excel into R dataframe
@@ -98,3 +82,81 @@ colnames(transactionData) <- c("items")
 #Show Dataframe transactionData
 transactionData
 
+write.csv(transactionData,"market_basket_transactions.csv", quote = FALSE, row.names = FALSE)
+#transactionData: Data to be written
+#quote: If TRUE it will surround character or factor column with double quotes. If FALSE nothing will be quoted
+#row.names: either a logical value indicating whether the row names of x are to be written along with x, or a character vector of row names to be written.
+
+tr <- read.transactions('market_basket_transactions.csv', format = 'basket', sep=',')
+View(tr)
+
+summary(tr)
+
+# Create an item frequency plot for the top 20 items
+if (!require("RColorBrewer")) {
+  # install color package of R
+  install.packages("RColorBrewer")
+  #include library RColorBrewer
+  library(RColorBrewer)
+}
+
+itemFrequencyPlot(tr,topN=20,type="absolute",col=brewer.pal(8,'Pastel2'), main="Absolute Item Frequency Plot")
+
+itemFrequencyPlot(tr,topN=20,type="relative",col=brewer.pal(8,'Pastel2'),main="Relative Item Frequency Plot")
+
+# Generating association rules
+# Min Support as 0.001, confidence as 0.8.
+association.rules <- apriori(tr, parameter = list(supp=0.001, conf=0.8,maxlen=10))
+summary(association.rules)
+
+# Print only 10 first assoc rules
+inspect(association.rules[1:10])
+
+shorter.association.rules <- apriori(tr, parameter = list(supp=0.001, conf=0.8,maxlen=3))
+
+# Removing redundant rules
+subset.rules <- which(colSums(is.subset(association.rules, association.rules)) > 1) # get subset rules in vector
+length(subset.rules)  #> 3913
+
+
+subset.association.rules. <- association.rules[-subset.rules] # remove subset rules.
+
+# Finding Rules related to given items
+# For example, to find what customers buy before buying 'METAL' run the following line of code:
+metal.association.rules <- apriori(tr, parameter = list(supp=0.001, conf=0.8),appearance = list(default="lhs",rhs="METAL"))
+
+# Here lhs=METAL because you want to find out the probability of that in how many customers buy METAL along with other items
+inspect(head(metal.association.rules))
+
+# Similarly, to find the answer to the question Customers who bought METAL also bought.... you will keep METAL on lhs:
+metal.association.rules <- apriori(tr, parameter = list(supp=0.001, conf=0.8),appearance = list(lhs="METAL",default="rhs"))
+
+## Here lhs=METAL because you want to find out the probability of that in how many customers buy METAL along with other items
+inspect(head(metal.association.rules))
+
+## Visualizing Association Rules
+# Scatter plot (nuage de points)
+# Filter rules with confidence greater than 0.4 or 40%
+subRules<-association.rules[quality(association.rules)$confidence>0.4]
+#Plot SubRules
+plot(subRules)
+
+# with options
+plot(subRules,method="two-key plot")
+
+# Interactive Scatter-Plot
+plotly_arules(subRules)
+
+# Graph-Based Visualizations
+# Let's select 10 rules from subRules having the highest confidence.
+top10subRules <- head(subRules, n = 10, by = "confidence")
+plot(top10subRules, method = "graph",  engine = "htmlwidget")
+
+# From arulesViz graphs for sets of association rules can be exported in the GraphML format or as a Graphviz
+# dot-file to be explored in tools like Gephi. For example, the 1000 rules with the highest lift are exported by:
+saveAsGraph(head(subRules, n = 1000, by = "lift"), file = "rules.graphml")
+
+# Individual Rule Representation
+# Filter top 20 rules with highest lift
+subRules2<-head(subRules, n=20, by="lift")
+plot(subRules2, method="paracoord")
