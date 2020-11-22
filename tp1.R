@@ -6,25 +6,29 @@
 
 # download data here : http://archive.ics.uci.edu/ml/datasets/online+retail
 
+
+print("*** START TP 1 ***")
+
+# please uncomment install packages first time for installing the required packages
+
 #install and load packages
-install.packages("arules")
+#install.packages("arules")
 library(arules)
-install.packages("arulesViz")
+#install.packages("arulesViz")
 library(arulesViz)
-install.packages("tidyverse")
+#install.packages("tidyverse")
 library(tidyverse)
 #install and load readxml
-install.packages("readxml")
+#install.packages("readxml")
 library(readxl)
-install.packages("knitr")
+#install.packages("knitr")
 library(knitr)
 library(ggplot2)
-install.packages("lubridate")
+#install.packages("lubridate")
 library(lubridate)
-install.packages("plyr")
+#install.packages("plyr")
 library(plyr)
 library(dplyr)
-install.packages()
 
 # change it according to your path
 # Change your_folder by your project folder
@@ -160,3 +164,6 @@ saveAsGraph(head(subRules, n = 1000, by = "lift"), file = "rules.graphml")
 # Filter top 20 rules with highest lift
 subRules2<-head(subRules, n=20, by="lift")
 plot(subRules2, method="paracoord")
+
+
+print("*** END TP1 *** ")
