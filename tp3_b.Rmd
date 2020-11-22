@@ -1,0 +1,126 @@
+---
+title: "Data Value FSTATADD2 TP3 b Perceptron"
+output: html_notebook
+---
+Author: Xavier VAN AUSLOOS
+Version: 22/11/20
+
+Crédits:https://databricks-prod-cloudfront.cloud.databricks.com/public/4027ec902e239c93eaaa8714f173bcfc/2961012104553482/2761297084239405/1806228006848429/latest.html
+
+1 Training Dataset Creation
+
+First define a few parameters to generate the data to be used to train a perceptron. Here we assume two groups with label -1 and 1 and the two classes are balanced (i.e. the number of data points are the same in two groups). We define N to be the number of data points in each group. The (x, y) coordinates for each data points are randomly created from a uniform distribution. For group with label -1, the coordiate of each data points are randomly created between 0 and 1. For group with label -1, the coordinate of each data points are randomly created between (x_offset, 1+x_offset) and (y_offset, 1+y_offset). A larger x_offset and y_offset (for example 1.0) can create linearly seperable dataset, while a smaller x_offset and y_offset (for example 0.2) can create not linearly seperable dataset.
+
+
+```{r}
+N = 50 # total number of data points each group
+x_offset = 0.5 # group separation on x axis
+y_offset = 0.5 # group separation on y axis
+```
+
+```{r}
+g1_x = runif(N, min = 0, max = 1)
+g1_y = runif(N, min = 0, max = 1)
+
+g2_x = runif(N, min = 0+x_offset, max = 1+x_offset)
+g2_y = runif(N, min = 0+y_offset, max = 1+y_offset)
+
+g_x = c(g1_x, g2_x)
+g_y = c(g1_y, g2_y)
+group = c(rep(-1,N), rep(1,N))
+
+print(g_x)
+print(g_y)
+print(group)
+```
+
+Now create a scatter plot with different color for each group and we can exam whether this dataset is linearly seperaable or not.
+
+```{r}
+plot(g_x, g_y, type='n', xlab='X', ylab='Y')
+points(g1_x, g1_y, col='red')
+points(g2_x, g2_y, col='blue')
+
+```
+2 Define Perceptron Parameters
+
+Here we define a few parameters for a perceptron model. The initial weights can be randomly choosen. M is the number of epoches to run, eta is the learning rate, and th is the accuracy threshold to stop. The training will stop if we reach the number of epoches or the accuracy is larger than the accuracy threshold. Please note, if the two groups are not perfectly linearly seperatable, then perceptron is never going to stop. So we add two stop critera here: (1) number of epochs, and (2) the threshold of accuracy, such that the program is going to stop when either criteria meet. Verbose is a flag to indicate whether we want to see more details of each weight update.
+
+```{r}
+
+w0 = 0.1 # initial weitht
+w1 = 0.2 # initial weight
+w2 = 0.3 # initial weitht
+
+M = 15            # number of epochs to run
+eta = 0.005       # learning rate
+th = 0.9          # threshold to stop
+verbose = F   # whether detailed weight update info is printed
+```
+
+3 Perceptron Model
+
+The perceptron model is defined in the below embed for loops with the outer loop for epoch and the inner loop for weight update of each data point. The accuracy is calculated after each epoch to decide whether next epoch is needed or not. For each epoch, the order of data points to update the weight is randomly shuffled.
+
+```{r}
+for (i in 1:M){
+    print(paste('Epoch starts: ', i))
+    
+    ## We reshuffle the order of the datapoint for each epoch.
+    index = 1:(2*N)
+    index = sample(index)
+    
+    for (j in index){
+        y_j = w0 + w1*g_x[j] + w2*g_y[j]
+        if (y_j >= 0){
+            pred_j = 1
+        }else{
+            pred_j = -1}
+        
+        w0 = w0 + eta*(group[j] - pred_j)*1.0
+        w1 = w1 + eta*(group[j] - pred_j)*g_x[j]
+        w2 = w2 + eta*(group[j] - pred_j)*g_y[j]
+        if (verbose == T){
+            print(paste('  -> updating data point ', j, ' : '))
+            print(paste('     -> w0: ' ,w0))
+            print(paste('     -> w0: ' ,w1))
+            print(paste('     -> w0: ' ,w2))
+        }
+    }  
+    y_all = w0 + w1*g_x + w2*g_y
+    y_pred = y_all
+    y_pred[y_all >= 0] = 1
+    y_pred[y_all< 0] = -1
+    
+    acc = sum(y_pred == group)/length(group)
+    print(paste('Epoch ends: ', i, ' WITH accuracy: ', acc))
+    if (acc >= th){
+      break
+    }
+}        
+
+```
+4 Checking Prediction
+
+Now let us check the prediction for each data points with the final weight from the perceptron algorithm and plot the final trained perceptron model (i.e. the dashed line in the graph).
+
+```{r}
+y_all = w0 + w1*g_x + w2*g_y
+print(y_all)
+
+y_pred = y_all
+y_pred[y_all >= 0] = 1
+y_pred[y_all< 0] = -1
+
+print(y_pred)
+
+acc = sum(y_pred == group)/length(group)
+print(acc)
+```
+```{r}
+plot(g_x, g_y, type='n', xlab='X', ylab='Y')
+points(g1_x, g1_y, col='red')
+points(g2_x, g2_y, col='blue')
+abline(a = -1.0*w0/w2, b = -1.0*w1/w2, col='dark green', lwd=3, lty=2)
+```
+
