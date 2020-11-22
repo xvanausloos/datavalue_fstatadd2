@@ -1,0 +1,369 @@
+---
+title: "Data Value FSTATADD2 TP 2 Analyse Discriminante"
+output: html_notebook
+---
+
+Auteur: Xavier VAN AUSLOOS Data Value 
+Crédits: A.B. Dufour, D. Chessel & J.R. Lobry
+Version: 22 Nov 2020 
+
+On lit les données IRIS
+
+
+```{r}
+data(iris)
+names(iris)
+dim(iris)
+```
+Approche univariee : on construit les histogrammes par espece et par va-
+riable :
+
+```{r}
+par(mfcol=c(3,4))
+for (k in 1:4) {
+  j0 <- names(iris)[k]
+  br0 <- seq(min(iris[,k]),max(iris[,k]),le=11)
+  x0 <- seq(min(iris[,k]),max(iris[,k]),le=50)
+  for (i in 1:3) {
+    i0 <- levels(iris$Species)[i]
+    x <- iris[iris$Species==i0,j0]
+    hist(x,br=br0,proba=T,col=grey(0.8), main=i0,xlab=j0)
+    lines(x0,dnorm(x0,mean(x),sd(x)),col="red",lwd=2)
+  }
+}
+```
+Approche bivariée : on réalise les analyses de la variance à 1 facteur, variable par variable.
+On prend par exemple la recherche d'une relation entre la longueur des sépales et les espèces.
+
+Calcul des moyennes par groupe:
+```{r}
+tapply(iris$Sepal.Length, iris$Species, mean)
+```
+Les écarts par groupe:
+
+```{r}
+tapply(iris$Sepal.Length,iris$Species,sd)
+```
+
+l'analyse de la variance à 1 facteur
+
+```{r}
+options(show.signif.stars=FALSE)
+anova(lm(iris$Sepal.Length~iris$Species))
+```
+Approche bivariée : on représente tous les nuages bivariés.
+```{r}
+# install.packages("ade4")
+library(ade4)
+# install.packages(("adegraphics"))
+library(adegraphics)
+s.class(iris[,1:4], iris$Species, xax=1:4, yax=1:4, porigin.include=FALSE,
+plabels.cex=1.5, col=c("blue","black","red"), ppoints.cex=1, starSize=0.5)
+
+```
+Approche en dimension 3 : on peut encore visualiser en trois dimensions.
+
+```{r}
+# install.packages("scatterplot3d")
+library(scatterplot3d)
+par(mfrow=c(2,2))
+mar0=c(2,3,2,3)
+scatterplot3d(iris[,1],iris[,2],iris[,3],mar=mar0,color=c("blue","black",
+"red")[iris$Species],pch=19)
+scatterplot3d(iris[,2],iris[,3],iris[,4],mar=mar0,color=c("blue","black",
+"red")[iris$Species],pch=19)
+scatterplot3d(iris[,3],iris[,4],iris[,1],mar=mar0,color=c("blue","black",
+"red")[iris$Species],pch=19)
+scatterplot3d(iris[,4],iris[,1],iris[,2],mar=mar0,color=c("blue","black",
+"red")[iris$Species],pch=19)
+
+```
+La variable discriminante
+
+```{r}
+set.seed(24122006)
+library(MASS)
+s <- matrix(c(1, 0.8, 0.8, 1), 2)
+x1 <- mvrnorm(50, c(0.3, -0.3), s)
+x2 <- mvrnorm(50, c(-0.3, 0.3), s)
+x <- rbind.data.frame(x1, x2)
+x <-scalewt(x,scale=F)
+fac <- factor(rep(1:2, rep(50, 2)))
+s.class(x,fac,col=c("red","blue"))
+art <- matrix(c(2, 0, sqrt(2), sqrt(2), 0, 2, -sqrt(2),sqrt(2)), byrow=TRUE, nrow=4)
+s.arrow(art, labels=c("A","B","C","D"), add=TRUE)
+
+```
+```{r}
+par(mfrow=c(2,2))
+f1 <- function(a,b,cha) {
+z <- a*x[,1]+b*x[,2]
+z0 <- seq(-4,4,le=50)
+z1 <- z[fac==1]
+z2 <- z[fac==2]
+hist(z, proba = TRUE, col = grey(0.9),xlim=c(-4,4),main=cha)
+lines(z0,dnorm(z0,mean(z),sd(z)),lwd=2)
+lines(z0,0.5*dnorm(z0,mean(z1),sd(z1)),col="red",lwd=2)
+lines(z0,0.5*dnorm(z0,mean(z2),sd(z2)),col="blue",lwd=2)
+}
+f1(1,0,"A")
+f1(1/sqrt(2),1/sqrt(2),"B")
+f1(0,1,"C")
+f1(-1/sqrt(2),1/sqrt(2),"D")
+```
+```{r}
+f2 <- function(a,b) {
+z <- a*x[,1]+b*x[,2]
+a1 <- var(z)*99/100
+a2 <- var(predict(lm(z~fac)))*99/100
+a3 <- a2/a1
+round(c(a1,a2,a3),3)
+}
+f2(1,0)
+```
+
+```{r}
+f2(1/sqrt(2),1/sqrt(2))
+```
+
+```{r}
+f2(0,1)
+
+```
+
+```{r}
+f2(-1/sqrt(2),1/sqrt(2))
+
+```
+Interprétations des valeurs ci-dessus:La premiere quantite est la variance descriptive totale. La deuxieme quantite est
+la variance intergroupe. La derniere est le rapport de la variance intergroupe sur la variance totale.
+La premiere quantite ne peut pas exceder la premiere valeur propre de l'ACP
+centree et ne peut pas etre moindre que la seconde valeur propre.
+
+```{r}
+w <- dudi.pca(x,scal=F,scannf=F)
+w$eig
+
+```
+```{r}
+w$c1
+```
+
+La position B est presque celle qui maximise la variance (elle est en fait l'axe
+principal theorique) : toute la variabilite est intra-population.
+La position D est presque celle qui minimise la variance (elle est en fait le
+second axe principal theorique). On y trouve quatre fois moins de variance mais
+la variabilite y est pour moitie inter-groupe.
+
+L'analyse inter-classe cherche les axes sur la base de la variabilite inter-classe :
+
+```{r}
+wbet <- bca(w, fac, scannf=F)
+wbet$eig
+
+```
+```{r}
+wbet$c1
+
+```
+
+La position D est presque celle qui maximise la variance inter-classe (elle est
+en fait l'axe inter-classe theorique) : on ne peut pas trouver plus de variance
+inter-groupe.
+
+L'analyse discriminante est celle qui maximisera le rapport :
+```{r}
+
+wdis <- discrimin(w,fac,scannf=F)
+wdis$fa/sqrt(sum(wdis$fa^2))
+
+```
+```{r}
+wdis$eig
+```
+[...]
+On commence toujours par caractériser la valeur discriminante de chacune des variables:
+
+```{r}
+apply(iris[,1:4],2,function(x) summary (lm(x~iris[,5])))
+```
+[...]
+Comparaison de deux fonctions 
+
+```{r}
+lda1 <- lda(as.matrix(iris[,1:4]),iris$Species)
+lda1
+
+```
+
+Utiliser discrimin et consulter la documentation (dans ade4) :
+
+```{r}
+dis1 <- discrimin(dudi.pca(iris[,1:4],scan=F),iris$Species,scan=F)
+dis1
+```
+
+Sans en avoir l'air, les deux fonctions sont coherentes. La premiere donne une
+combinaison lineaire de variables de depart avec les coecients qui sont dans la
+colonne LD1. Calculer cette combinaison :
+
+```{r}
+w1 <- as.vector(as.matrix(iris[,1:4])%*%lda1$scaling[,1])
+w1[1:10]
+```
+
+La seconde donne une combinaison lineaire de variables normalisees (en 1=n)
+avec les coecients qui sont dans la composante fa (fa pour facteur, dans le
+vocabulaire du schema de dualite). Calculer cette combinaison et comparer :
+
+```{r}
+w2 <- as.vector(scalewt(iris[,1:4])%*%dis1$fa[,1])
+
+w2[1:10]
+
+
+```
+```{r}
+w2[141:150]
+```
+
+```{r}
+plot(w1,w2,pch=20)
+abline(lm(w2~w1))
+```
+
+La seconde donne une combinaison lineaire de variance totale 1 (en 1=n) :
+
+```{r}
+var(w2)*149/150
+
+```
+
+qui maximise la variance inter-classe (la premiere valeur propre) :
+
+```{r}
+dis1$eig
+
+```
+```{r}
+summary(lm(w2 ~ iris[, 5]))$r.squared
+```
+ou encore
+
+```{r}
+var(predict(lm(w2~iris[,5])))*149/150
+
+```
+La premiere donne une combinaison lineaire de variance intra-classe unite :
+
+```{r}
+tapply(w1,iris[,5],var)
+
+```
+```{r}
+mean(tapply(w1,iris[,5],var))
+```
+qui maximise la variance inter-classe.
+
+Tester les valeurs propres
+
+[..]
+
+Les valeurs propres de discrimin sont :
+
+```{r}
+w1 <- dis1$eig
+w1
+```
+Les valeurs propres de l'autre diagonalisation sont donc :
+
+```{r}
+w2 <- w1/(1-w1)
+w2
+
+
+```
+```{r}
+w2/sum(w2)
+```
+On retrouve les contributions a la trace dans lda a l'achage et dans :
+
+```{r}
+lda1$svd^2/sum(lda1$svd^2)
+
+```
+[....]
+Test de Pillai
+
+```{r}
+size <- as.matrix(iris[,1:4])
+spec <- iris[,5]
+m1 <- manova(size~spec)
+summary(m1,test="Pillai")
+
+```
+
+Le critere de Pillai est la somme des valeurs propres de l'analyse discriminante
+du schema [1] :
+
+```{r}
+w1 <- dis1$eig
+sum(w1)
+
+```
+
+Test de Wilks
+
+```{r}
+summary(m1,test="Wilks")
+```
+Le critere de Wilks est le produit des pourcentages de variance intra-classes qu'on teste avec 􀀀log(W) :
+
+```{r}
+prod(1-w1)
+
+```
+Test de Hotelling-Lawley
+
+```{r}
+summary(m1,test="Hotelling-Lawley")
+
+```
+Le critere de Hotelling-Lawley est la somme des valeurs propres de l'analyse
+discriminante du second schema :
+
+```{r}
+w2 <- w1/(1-w1)
+w2
+
+```
+```{r}
+sum(w2)
+```
+Le test de Roy
+
+```{r}
+summary(m1,test="Roy")
+
+```
+
+Le critere de Roy est la plus grande valeur propre du schema 2 :
+
+```{r}
+w2
+```
+Ces tests s'etendent aux modeles lineaires quelconques comme l'anova
+Quand l'hypothese de normalite est intenable, on a une version non parame-
+trique du test de Pillai avec randtest.discrimin.
+
+```{r}
+plot(randtest(dis1))
+```
+La statistique observee est le critere de Pillai divise par le rang de l'analyse de
+depart :
+
+```{r}
+sum(dis1$eig)/4
+
+```
+
