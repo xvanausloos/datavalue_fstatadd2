@@ -367,3 +367,32 @@ sum(dis1$eig)/4
 
 ```
 
+Discrimination predictive ou descriptive
+
+La fonction lda est centree sur la question de l'affectation d'un individu à une classe. 
+Peut-on prédire à quelle classe appartient un individu dont on connaît les mesures ?
+
+Exemple des iris
+Le but de l'exercice est de diviser au hasard le tableau de donnees en deux parties, la première pour chercher une fonction discriminante, la seconde pour déterminer l'espèce à l'aide de cette fonction. 
+On comparera ensuite le résultat obtenu et les vraies valeurs.
+
+
+```{r}
+echa <- sample(1:150,50)
+tabref <- iris[echa,1:4] # selection de 50 iris
+espref <- iris[echa,5] # noms d'especes de la selection
+tabsup <- iris[-echa,1:4] # tableau des 100 autres
+espsup <- iris[-echa,5] # nom de l'espece des 100 autres
+lda2 <- lda(tabref,espref)
+lda2
+
+```
+
+```{r}
+espestim <- predict(lda2,tabsup)$class # fonction generique utilise predict.lda
+table(espestim,espsup)
+```
+
+A l'aide de 50 plantes, on récupère pratiquement sans erreur le nom des 100 inconnues. Le cas est très favorable.
+
+NB: ne faites pas l'exercie sur les crânes dans le cours / tp svp.
