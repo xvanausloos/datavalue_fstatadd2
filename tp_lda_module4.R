@@ -48,7 +48,13 @@ sum(prev3!=donnees$ronfle)/nrow(donnees)
 n_don1 <- matrix(c(42,55,169,0,58,94,185,4,35,70,180,6,67,63,166,3), ncol=4, byrow=T)
 n_don2 <- matrix(c("F","N","H","O","H","O","F","N"), ncol=2, byrow=T)
 n_donnees<-cbind.data.frame(n_don1, n_don2)
+
+# on passe le nom des colonnes dans le nouvel objet dataframe et on ne prend que les 6 derniers 
+names(donnees)
+
 names(n_donnees) <- names(donnees)[-6]
+
+names(n_donnees)
 
 predict(modele, newdata = n_donnees)
 
