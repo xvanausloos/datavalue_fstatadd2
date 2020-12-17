@@ -37,9 +37,11 @@ setwd(your_folder)
 
 
 #read excel into R dataframe
-retail <- read_xlsx('Online Retail.xlsx')
+retail <- read_xlsx('c://xaviertemp//datavalue_fstatsadd2/tp1_exercice_b_data/Online Retail.xlsx')
 
-#complete.cases(data) will return a logical vector indicating which rows have no missing values. Then use the vector to get only rows that are complete using retail[,].
+
+#complete.cases(data) will return a logical vector indicating which rows have no missing values.
+# Then use the vector to get only rows that are complete using retail[,].
 retail <- retail[complete.cases(retail), ]
 
 # mutate function is from dplyr package. It is used to edit or add new columns to dataframe. 
@@ -56,6 +58,11 @@ TransTime<- format(retail$InvoiceDate,"%H:%M:%S")
 
 #Convert and edit InvoiceNo into numeric
 InvoiceNo <- as.numeric(as.character(retail$InvoiceNo))
+
+# NAs introduced by coercion” 
+# The reason for this is that some of the character strings are not properly formatted numbers 
+# and hence cannot be converted to the numeric class.
+
 
 #Bind new columns TransTime and InvoiceNo into dataframe retail
 cbind(retail,TransTime)
@@ -166,4 +173,4 @@ subRules2<-head(subRules, n=20, by="lift")
 plot(subRules2, method="paracoord")
 
 
-print("*** END TP1 *** ")
+# ---"*** END TP1 *** "
