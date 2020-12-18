@@ -5,25 +5,43 @@ output: html_notebook
 
 TP6A Réseaux de neurones avec R. 
 Auteur: Xavier VAN AUSLOOS
-Version: 12/12/2020
+Version: 18/12/2020
+Source: https://rpubs.com/JanpuHou/303002
 
 ## Create Test Data
 
 ```{r}
 set.seed(42)
-x<-runif(200, -10, 10)
-y<-sin(x)
+x<-runif(200, -10, 10) #runif generates random deviates
+y<-sin(x) #sine function
 plot(x,y)
 ```
+Have a look at our data: 
+```{r}
+x
+
+```
+
 ## Randomize the initial weights
-A network function is made of three components: the network of neurons, the weight of each connection between neuron and the activation function of each neuron. For this example, we’ll use a feed-forward neural network and the logistic activation which are the defaults for the package nnet. We take one number as input of our neural network and we want one number as the output so the size of the input and output layer are both of one. For the hidden layer, we’ll start with three neurons. It’s good practice to randomize the initial weights, so create a vector of 10 random values, picked in the interval [-1,1].
+A network function is made of three components: the network of neurons, the weight of each connection between neuron and the activation function of each neuron. 
+
+For this example, we’ll use a feed-forward neural network and the logistic activation which are the defaults for the package nnet. 
+
+We take one number as input of our neural network and we want one number as the output so the size of the input and output layer are both of one. For the hidden layer, we’ll start with three neurons. It’s good practice to randomize the initial weights, so create a vector of 10 random values, picked in the interval [-1,1].
 
 ```{r}
 weight<-runif(10, -1, 1)
+
+weight
+
 ```
 
 ## Create Training Set and Test Set
-Neural networks have a strong tendency of overfitting your data, meaning they become really good at describing the relationship between the values in your data set, but are not effective with data that wasn’t used to train your model. As a consequence, we need to cross-validate our model. Set the seed to 42, then create a training set containing 75% of the values in your initial data set and a test set containing the rest of your data.
+Neural networks have a strong tendency of overfitting your data, meaning they become really good at describing the relationship between the values in your data set, but are not effective with data that wasn’t used to train your model. 
+
+As a consequence, we need to cross-validate our model. Set the seed to 42, then create a training set containing 75% of the values in your initial data set and a test set containing the rest of your data.
+Cross validation explainations: 
+https://www.kevindegila.com/la-validation-croisee-en-machine-learning-tout-ce-quil-faut-savoir/
 
 ```{r}
 set.seed(42)
