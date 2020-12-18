@@ -50,13 +50,18 @@ reg.train<-data.frame(X=x[index],Y=y[index])
 reg.test<-data.frame(X=x[-index],Y=y[-index])
 head(reg.train)
 ```
+```{r}
+reg.train #150 data ie 75% of 200 obs
+dim(reg.train)
+```
 
 ```{r}
 head(reg.test)
+dim(reg.test) #25/ of 200
+reg.test
 ```
 
 ## Usint nnet to create the model
-
 Load the nnet package and use the function of the same name to create your model. Pass your weights via the Wts argument and set the maxit argument to 50. We want to fit a function which can have for output multiple possible values. To do so, set the linout argument to true. Finally, take the time to look at the structure of your model.
 
 ```{r}
@@ -66,9 +71,17 @@ reg.model.1<-nnet(reg.train$X,reg.train$Y,size=3,maxit=50,Wts=weight,linout=TRUE
 ```
 Have a look at the model 
 reg.model.1 ==> modellogical.  If true, the model frame is saved as componentmodelof the returnedobject.
+
+
+
 ```{r}
 str(reg.model.1)
+
 ```
+```{r}
+summary(reg.model.1)
+```
+
 
 ## Predict with RMSE
 Predict the output for the test set and compute the RMSE of your predictions. Plot the function sin(x) and then plot your predictions.
